@@ -1,0 +1,65 @@
+# =============================================================================
+# pyproject.toml - the single configuration file for this project.
+#
+# It answers three questions:
+#   1. What is this project?           -> [project]
+#   2. How do we build/install it?     -> [build-system]
+#   3. How are our tools configured?   -> [tool.*]
+# =============================================================================
+
+
+
+[project]
+name = "expense-tracker"
+version = "1.0.0"
+description = "A command-line app to track personal expenses"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+# Optional extras. Install with:  pip install -e ".[charts]"  or  ".[dev]"
+[project.optional-dependencies]
+charts = ["matplotlib>=3.8"]
+dev = ["pytest>=8.0", "ruff>=0.6", "matplotlib>=3.8"]
+
+# After installing, typing `expense-tracker` in the terminal runs cli.main()
+[project.scripts]
+expense-tracker = "expense_tracker.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# Tell the build tool where our package lives (the "src layout").
+[tool.hatch.build.targets.wheel]
+packages = ["src/expense_tracker"]
+
+# -----------------------------------------------------------------------------
+# Ruff: linter (finds problems) + formatter (makes code look consistent)
+# -----------------------------------------------------------------------------
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors  - basic style problems
+    "W",    # pycodestyle warnings - e.g. trailing whitespace
+    "F",    # Pyflakes            - unused imports, undefined names
+    "I",    # isort               - imports sorted and grouped
+    "N",    # pep8-naming         - good names for classes/functions
+    "B",    # flake8-bugbear      - common bug patterns
+    "UP",   # pyupgrade           - use modern Python syntax
+    "SIM",  # flake8-simplify     - simpler ways to write the same thing
+]
+
+[tool.ruff.format]
+quote-style = "double"
+
+# -----------------------------------------------------------------------------
+# pytest: where tests live
+# -----------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"

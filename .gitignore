@@ -1,0 +1,19 @@
+# Virtual environment (each developer creates their own)
+.venv/
+venv/
+
+# Python cache files (generated automatically)
+__pycache__/
+*.pyc
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+
+# Build output
+build/
+dist/
+*.egg-info/
+
+# Personal data - never upload your real expenses to GitHub
+data/
