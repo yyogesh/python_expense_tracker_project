@@ -14,6 +14,7 @@ import datetime as dt
 import pytest
 
 from expense_tracker.models import Expense
+from expense_tracker.tracker import ExpenseTracker
 
 
 @pytest.fixture
@@ -24,3 +25,13 @@ def sample_expenses() -> list[Expense]:
         Expense(3, 30.0, "Food", "Restaurant", dt.date(2026, 9, 1)),
         Expense(4, 100.0, "Housing", "Repairs", dt.date(2026, 9, 3)),
     ]
+
+
+@pytest.fixture
+def tracker(tmp_path) -> ExpenseTracker:
+    """A tracker using a temporary folder.
+
+    ``tmp_path`` is a built-in pytest fixture: a fresh empty folder for each
+    test, deleted afterwards. Tests never touch your real data.
+    """
+    return ExpenseTracker(tmp_path)
