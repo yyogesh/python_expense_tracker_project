@@ -30,3 +30,14 @@ python -m expense-tracker
 
 
 python -m pip 
+
+
+EXPENSE_TRACKER_DATA_DIR="$HOME/my-expenses" expense-tracker
+
+
+$env:EXPENSE_TRACKER_DATA_DIR = "$HOME\my-expenses"
+
+
+echo $?                  # macOS / Linux
+echo $LASTEXITCODE       # Windows PowerShell
+echo %ERRORLEVEL%        # Windows Command Prompt

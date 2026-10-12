@@ -1,7 +1,7 @@
 """Entry point for ``python -m expense_tracker``."""
 
-
 import sys
+
 from expense_tracker.cli import main
 
 if __name__ == "__main__":
