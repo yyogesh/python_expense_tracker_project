@@ -22,3 +22,11 @@ expense-tracker/
 
 
 pip install -e ".[charts]
+
+
+expense-tracker
+
+python -m expense-tracker
+
+
+python -m pip 
