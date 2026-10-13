@@ -5,8 +5,10 @@ from collections.abc import Callable
 from typing import TypeVar
 
 from expense_tracker import __version__, reports
+from expense_tracker.charts import ChartError, save_category_pie, save_monthly_bar
 from expense_tracker.config import (
     CATEGORIES,
+    CHARTS_DIR,
     CURRENCY,
     DATA_DIR,
     EXPORT_FILE,
@@ -282,6 +284,13 @@ def export_csv(tracker: ExpenseTracker) -> None:
     print(f"\n  Exported {count} expense(s) to {path}")
 
 
+def create_charts(tracker: ExpenseTracker) -> None:
+    charts_dir = tracker.data_dir / CHARTS_DIR
+    pie = save_category_pie(tracker.expenses, charts_dir / "by_category.png")
+    bar = save_monthly_bar(tracker.expenses, charts_dir / "by_month.png")
+    print(f"\n  Charts saved:\n    {pie}\n    {bar}")
+
+
 MENU: dict[str, tuple[str, Callable[[ExpenseTracker], None]]] = {
     "1": ("Add expense", add_expense),
     "2": ("View all expenses", view_expenses),
@@ -292,6 +301,7 @@ MENU: dict[str, tuple[str, Callable[[ExpenseTracker], None]]] = {
     "7": ("Summary report", show_summary),
     "8": ("Set monthly budget", set_budget),
     "9": ("Export to CSV", export_csv),
+    "10": ("Create charts", create_charts),
 }
 
 
@@ -317,7 +327,7 @@ def run(tracker: ExpenseTracker) -> None:
         try:
             action(tracker)
         # Expected problems: show a message and keep the app running.
-        except (ExpenseNotFoundError, StorageError) as error:
+        except (ExpenseNotFoundError, StorageError, ChartError) as error:
             print(f"  ! {error}")
 
 

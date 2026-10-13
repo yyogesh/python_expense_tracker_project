@@ -41,3 +41,10 @@ $env:EXPENSE_TRACKER_DATA_DIR = "$HOME\my-expenses"
 echo $?                  # macOS / Linux
 echo $LASTEXITCODE       # Windows PowerShell
 echo %ERRORLEVEL%        # Windows Command Prompt
+
+
+pip install -e .
+
+pip install -e ".[charts]"
+
+pip install -e ".[dev]"
