@@ -41,6 +41,22 @@ def test_wrong_shape_raises_storage_error(tmp_path):
         load_expenses(path)
 
 
+def test_amounts_are_saved_as_text(tmp_path, sample_expenses):
+    path = tmp_path / "expenses.json"
+    save_expenses(sample_expenses, path)
+    assert '"amount": "50.00"' in path.read_text(encoding="utf-8")
+
+
+def test_bad_amount_raises_storage_error(tmp_path):
+    path = tmp_path / "expenses.json"
+    path.write_text(
+        '[{"id": 1, "amount": "abc", "category": "Food", "date": "2026-09-01"}]',
+        encoding="utf-8",
+    )
+    with pytest.raises(StorageError):
+        load_expenses(path)
+
+
 def test_settings_round_trip(tmp_path):
     path = tmp_path / "settings.json"
     assert load_settings(path) == {}

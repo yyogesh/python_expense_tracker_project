@@ -48,3 +48,8 @@ pip install -e .
 pip install -e ".[charts]"
 
 pip install -e ".[dev]"
+
+
+float ==> base 2
+
+base 10

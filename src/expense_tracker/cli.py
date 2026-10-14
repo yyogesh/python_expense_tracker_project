@@ -1,7 +1,21 @@
-"""Command-line interface - everything the user sees and types."""
+"""Command-line interface - everything the user sees and types.
+
+Why this file exists:
+    This is the ONLY file that uses ``input()`` and ``print()``. It shows the
+    menu, asks questions, and calls the tracker/reports/charts to do the real
+    work. Keeping user interaction in one place means Version 2 could add a GUI
+    or web page without touching the logic files.
+
+Flow of the program:
+    main() -> creates ExpenseTracker -> run() shows the menu in a loop ->
+    each menu choice calls one small function (add_expense, show_summary...).
+"""
+
+from __future__ import annotations
 
 import datetime as dt
 from collections.abc import Callable
+from decimal import Decimal
 from typing import TypeVar
 
 from expense_tracker import __version__, reports
@@ -26,52 +40,31 @@ from expense_tracker.validators import (
     parse_positive_int,
 )
 
-# def say_hello(name: str) -> str:
-#     return f"Hello, {name}!"
-
-# def execute_action(action: Callable[[str], str]) -> None:
-#     result = action("Yogesh")
-#     print(result)
-
-# execute_action(say_hello)
-
-
-# def get_first_number(items: list[int]) -> int:
-#     return items[0]
-
-
-# def get_first_string(items: list[str]) -> str:
-#     return items[0]
-
-
-# T = TypeVar("T")
-
-# def get_first(items: list[T]) -> T:
-#     return items[0]
-
-# number = get_first([10, 20, 30])
-# name = get_first(["Yogesh", "Amit", "Rahul"])
-
-
+# T is a "type variable": ask() returns whatever type its parser returns.
 T = TypeVar("T")
 
+# ===========================================================================
+# Small helpers for input and output
+# ===========================================================================
 
-def money(amount: float) -> str:
-    """12345.5 -> "$12,345.50"."""
+
+def money(amount: Decimal) -> str:
+    """Decimal("12345.5") -> "$12,345.50". Decimal understands :,.2f too."""
     return f"{CURRENCY}{amount:,.2f}"
 
 
 def ask(prompt: str, parser: Callable[[str], T]) -> T:
-    """Ask a question until the answer is valid."""
+    """Ask a question until the answer is valid.
+
+    ``parser`` is a function (for example ``parse_amount``). Passing functions
+    as arguments lets ONE loop handle every kind of question.
+    """
     while True:
         text = input(prompt)
         try:
             return parser(text)
         except ValidationError as error:
             print(f"  ! {error}")
-
-
-# ask("Enter a number: ", parse_amount)
 
 
 def ask_with_default(prompt: str, parser: Callable[[str], T], default: T) -> T:
@@ -115,20 +108,12 @@ def print_expenses(expenses: list[Expense]) -> None:
     print(f"  {len(expenses)} expense(s), total {money(reports.total(expenses))}")
 
 
-#     ID  Date        Category             Amount  Description
-#   ----------------------------------------------------------------------
-#      1  2026-09-02  Food                 $45.20  Groceries
-#      2  2026-09-03  Housing           $1,250.00  Rent
-#   2 expense(s), total $1,295.20
-
-
-def text_bar(ratio: float, width: int = 20) -> str:
+def text_bar(ratio: float | Decimal, width: int = 20) -> str:
     """A tiny bar chart made of characters: [#####-----]."""
-    filled = round(min(ratio, 1.0) * width)
+    # float() is fine here: a bar of # characters does not need exact cents.
+    filled = round(min(float(ratio), 1.0) * width)
     return "[" + "#" * filled + "-" * (width - filled) + "]"
 
-
-# Housing   $380.00  [#################---] 86%
 
 # ===========================================================================
 # Menu actions - one function per menu option
@@ -146,29 +131,6 @@ def add_expense(tracker: ExpenseTracker) -> None:
     expense = tracker.add(amount, category, description, date)
     print(f"  Saved expense #{expense.id}: {money(expense.amount)} on {category}.")
     warn_about_budget(tracker, expense.date)
-
-
-def warn_about_budget(
-    tracker: ExpenseTracker, day: dt.date, *, always_show: bool = False
-) -> None:
-    """Print a warning if spending in ``day``'s month is near or over budget."""
-    budget = tracker.monthly_budget
-    if budget is None:
-        return
-    status = reports.budget_status(tracker.expenses, budget, day.year, day.month)
-    month = day.strftime("%Y-%m")
-    if status.level == "over":
-        print(f"  !! OVER BUDGET for {month} by {money(-status.remaining)}.")
-    elif status.level == "warning":
-        print(
-            f"  ! Careful: {status.ratio:.0%} of your {month} budget used, "
-            f"{money(status.remaining)} left."
-        )
-    elif always_show:
-        print(
-            f"\n  Budget {month}: {money(status.spent)} of {money(budget)} "
-            f"{text_bar(status.ratio)} {money(status.remaining)} left."
-        )
 
 
 def view_expenses(tracker: ExpenseTracker) -> None:
@@ -267,7 +229,7 @@ def set_budget(tracker: ExpenseTracker) -> None:
     current = tracker.monthly_budget
     print(f"  Current budget: {money(current) if current else 'not set'}")
 
-    def parse_budget(text: str) -> float | None:
+    def parse_budget(text: str) -> Decimal | None:
         """A parser defined inside a function: 0 or Enter removes the budget."""
         if text.strip() in ("", "0"):
             return None
@@ -276,6 +238,29 @@ def set_budget(tracker: ExpenseTracker) -> None:
     budget = ask("  New monthly budget (0 or Enter = remove): ", parse_budget)
     tracker.set_monthly_budget(budget)
     print(f"  Budget {'set to ' + money(budget) if budget else 'removed'}.")
+
+
+def warn_about_budget(
+    tracker: ExpenseTracker, day: dt.date, *, always_show: bool = False
+) -> None:
+    """Print a warning if spending in ``day``'s month is near or over budget."""
+    budget = tracker.monthly_budget
+    if budget is None:
+        return
+    status = reports.budget_status(tracker.expenses, budget, day.year, day.month)
+    month = day.strftime("%Y-%m")
+    if status.level == "over":
+        print(f"  !! OVER BUDGET for {month} by {money(-status.remaining)}.")
+    elif status.level == "warning":
+        print(
+            f"  ! Careful: {status.ratio:.0%} of your {month} budget used, "
+            f"{money(status.remaining)} left."
+        )
+    elif always_show:
+        print(
+            f"\n  Budget {month}: {money(status.spent)} of {money(budget)} "
+            f"{text_bar(status.ratio)} {money(status.remaining)} left."
+        )
 
 
 def export_csv(tracker: ExpenseTracker) -> None:
@@ -291,6 +276,13 @@ def create_charts(tracker: ExpenseTracker) -> None:
     print(f"\n  Charts saved:\n    {pie}\n    {bar}")
 
 
+# ===========================================================================
+# Menu and main loop
+# ===========================================================================
+
+# A "dispatch dictionary": maps what the user types to (label, function).
+# Adding a new feature = write a function + add ONE line here.
+# No long if/elif chain needed.
 MENU: dict[str, tuple[str, Callable[[ExpenseTracker], None]]] = {
     "1": ("Add expense", add_expense),
     "2": ("View all expenses", view_expenses),

@@ -2,10 +2,8 @@ import pytest
 
 from expense_tracker.charts import ChartError, save_category_pie, save_monthly_bar
 
+# Skip these tests if matplotlib is not installed.
 pytest.importorskip("matplotlib")
-# pytest skips this whole file instead of failing it.
-# A missing optional library isn’t a bug in our code, so it shouldn’t show up as a red failure.
-# Skipped tests are reported separately, so you can still see they didn’t run.
 
 
 def test_charts_are_created(tmp_path, sample_expenses):

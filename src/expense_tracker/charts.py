@@ -1,3 +1,20 @@
+"""Charts - turning report data into PNG images with matplotlib.
+
+Why this file exists:
+    A picture of your spending is easier to understand than a table of
+    numbers. matplotlib is an *external* library (not built into Python), so we
+    keep it in its own file and make it OPTIONAL:
+
+        pip install -e ".[charts]"
+
+    If matplotlib is missing, the rest of the app still works; only the chart
+    menu option shows a helpful message.
+
+Key idea - lazy import:
+    We import matplotlib *inside* a function instead of at the top of the file.
+    That way the app starts even when matplotlib is not installed.
+"""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -16,11 +33,13 @@ class ChartError(Exception):
 def _load_pyplot() -> Any:
     try:
         import matplotlib
-    except ImportError as e:
+    except ImportError as error:
         raise ChartError(
-            "matplotlib is required to create charts. Please install it with `pip install matplotlib`."
-        ) from e
-    matplotlib.use("Agg")  # Use a non-interactive backend
+            'Charts need matplotlib. Install it with: pip install -e ".[charts]"'
+        ) from error
+    # "Agg" draws straight to image files, without opening a window.
+    # This works everywhere, even on servers with no screen.
+    matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
     return plt
@@ -35,14 +54,15 @@ def save_category_pie(expenses: Iterable[Expense], path: Path) -> Path:
 
     fig, ax = plt.subplots(figsize=(7, 7))
     ax.pie(
-        list(totals.values()),
+        # matplotlib draws pixels and works with floats; exact cents only
+        # matter for the numbers we store and add up, not for a picture.
+        [float(amount) for amount in totals.values()],
         labels=list(totals.keys()),
         autopct="%1.1f%%",  # show percentages with one decimal
         startangle=90,
     )
     ax.set_title("Spending by category", pad=20)  # pad = space above the pie
     ax.axis("equal")  # keep the pie round
-
     return _save(fig, plt, path)
 
 
@@ -54,7 +74,8 @@ def save_monthly_bar(expenses: Iterable[Expense], path: Path) -> Path:
     plt = _load_pyplot()
 
     fig, ax = plt.subplots(figsize=(9, 5))
-    ax.bar(list(totals.keys()), list(totals.values()), color="#4C72B0")
+    values = [float(amount) for amount in totals.values()]
+    ax.bar(list(totals.keys()), values, color="#4C72B0")
     ax.set_title("Spending by month")
     ax.set_xlabel("Month")
     ax.set_ylabel(f"Amount ({CURRENCY})")
@@ -63,8 +84,7 @@ def save_monthly_bar(expenses: Iterable[Expense], path: Path) -> Path:
 
 
 def _save(fig: Any, plt: Any, path: Path) -> Path:
-    """Save the figure to a file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=120, bbox_inches="tight")
-    plt.close(fig)
+    plt.close(fig)  # free memory - important when making many charts
     return path

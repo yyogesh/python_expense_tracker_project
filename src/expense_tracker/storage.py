@@ -1,10 +1,22 @@
-"""Storage - saving and loading data from files."""
+"""Storage - saving and loading data from files.
+
+Why this file exists:
+    Without saving, every expense disappears when the program closes. All file
+    reading/writing lives here, so if Version 2 switches from JSON to a SQLite
+    database, this is the only file that must change. The rest of the app never
+    knows *how* data is stored.
+
+Formats used:
+    JSON - human-readable, built into Python, keeps structure (lists/dicts).
+    CSV  - simple table format that Excel and Google Sheets can open.
+"""
 
 from __future__ import annotations
 
 import csv
 import json
 from collections.abc import Iterable
+from decimal import InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -19,18 +31,15 @@ class StorageError(Exception):
 
 def load_expenses(path: Path) -> list[Expense]:
     """Read expenses from a JSON file. A missing file means "no expenses yet"."""
-
     if not path.exists():
         return []
-
     raw = _read_json(path)
-
     if not isinstance(raw, list):
         raise StorageError(f"{path} should contain a list of expenses.")
-
     try:
         return [Expense.from_dict(item) for item in raw]
-    except (KeyError, ValueError, TypeError) as error:
+    # InvalidOperation: an amount like "abc" (Decimal's error is not a ValueError)
+    except (KeyError, ValueError, TypeError, InvalidOperation) as error:
         raise StorageError(f"{path} contains an invalid expense: {error}") from error
 
 

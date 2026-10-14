@@ -1,7 +1,21 @@
+"""Input validation - turning raw text from the user into safe, typed values.
+
+Why this file exists:
+    ``input()`` always returns a string, and users type anything: "abc",
+    "-5", "", "12,50", "tomorrow". Each function here takes that raw text and
+    either returns a clean value or raises ``ValidationError`` with a friendly
+    message. The CLI shows the message and asks again.
+
+Why separate from cli.py?
+    These functions do not print or read anything, so they are easy to test:
+    ``parse_amount("12.5") == Decimal("12.50")``. That is the idea of *pure
+    functions*.
+"""
+
 from __future__ import annotations
 
 import datetime as dt
-import math
+from decimal import Decimal, InvalidOperation
 
 from expense_tracker.config import (
     CATEGORIES,
@@ -11,6 +25,7 @@ from expense_tracker.config import (
     MAX_DESCRIPTION_LENGTH,
     MONTH_FORMAT,
 )
+from expense_tracker.models import to_money
 
 
 class ValidationError(ValueError):
@@ -22,27 +37,32 @@ class ValidationError(ValueError):
     """
 
 
-def parse_amount(text: str) -> float:
-    """Convert text like "12.50", "$1,200" into a positive float."""
-    cleaned = text.strip().replace(",", "")
-    cleaned = cleaned.removeprefix(CURRENCY).removesuffix(".").strip()
+def parse_amount(text: str) -> Decimal:
+    """Convert text like "12.50", "$1,200" into a positive Decimal in cents.
 
+    The user typed TEXT, so we build the Decimal straight from that text and
+    never go through float: "19.99" stays exactly 19.99.
+    """
+    cleaned = text.strip().replace(",", "").removeprefix(CURRENCY).strip()
     if not cleaned:
         raise ValidationError("Amount cannot be empty.")
-
     try:
-        value = float(cleaned)
-    except ValueError:
+        value = Decimal(cleaned)
+    # Decimal raises InvalidOperation, which is NOT a ValueError. Catching
+    # ValueError here (as we did with float) would let "abc" crash the app.
+    except InvalidOperation:
         # "from None" hides the original technical error from the traceback.
         raise ValidationError(f"'{text.strip()}' is not a number.") from None
-    # float() happily accepts "nan" and "inf" - we must reject them ourselves.
-    if not math.isfinite(value):
+    # Decimal, like float, accepts "nan" and "inf" - we must reject them.
+    if not value.is_finite():
         raise ValidationError("Amount must be a real number.")
-    if value <= 0:
-        raise ValidationError("Amount must be greater than zero.")
     if value > MAX_AMOUNT:
         raise ValidationError(f"Amount must be at most {MAX_AMOUNT:,}.")
-    return round(value, 2)
+    amount = to_money(value)
+    # Check AFTER rounding: "0.001" is positive, but rounds to 0.00.
+    if amount <= 0:
+        raise ValidationError("Amount must be at least 0.01.")
+    return amount
 
 
 def parse_category(text: str) -> str:
@@ -71,7 +91,7 @@ def parse_description(text: str) -> str:
 
 def parse_date(text: str, *, today: dt.date | None = None) -> dt.date:
     """Convert "YYYY-MM-DD" to a date. Empty input means today.
-    name = value
+
     The ``*`` makes ``today`` keyword-only. Tests pass a fixed ``today`` so
     results never depend on the day the tests happen to run.
     """
@@ -88,24 +108,6 @@ def parse_date(text: str, *, today: dt.date | None = None) -> dt.date:
     return parsed
 
 
-# def parse_date(text: str, today: dt.date | None = None):
-
-# parse_date("2026-09-30")
-# parse_date("2026-09-30", dt.date(2026, 9, 29))
-
-# def parse_date(text: str, *, today: dt.date | None = None):
-# parse_date("2026-09-30")
-# # parse_date("2026-09-30", today=dt.date(2026, 9, 29))
-
-
-def parse_positive_int(text: str) -> int:
-    """Used for expense IDs."""
-    cleaned = text.strip()
-    if not cleaned.isdigit() or int(cleaned) == 0:
-        raise ValidationError("Please enter a positive whole number.")
-    return int(cleaned)
-
-
 def parse_month(text: str, *, today: dt.date | None = None) -> tuple[int, int]:
     """Convert "YYYY-MM" to (year, month). Empty input means this month."""
     today = today or dt.date.today()
@@ -117,3 +119,11 @@ def parse_month(text: str, *, today: dt.date | None = None) -> tuple[int, int]:
     except ValueError:
         raise ValidationError("Month must look like 2026-09 (YYYY-MM).") from None
     return parsed.year, parsed.month
+
+
+def parse_positive_int(text: str) -> int:
+    """Used for expense IDs."""
+    cleaned = text.strip()
+    if not cleaned.isdigit() or int(cleaned) == 0:
+        raise ValidationError("Please enter a positive whole number.")
+    return int(cleaned)
