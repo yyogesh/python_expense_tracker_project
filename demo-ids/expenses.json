@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "amount": "4.50",
+    "category": "Food",
+    "description": "Sandwich",
+    "date": "2026-09-01"
+  },
+  {
+    "id": 2,
+    "amount": "2.75",
+    "category": "Transport",
+    "description": "Bus",
+    "date": "2026-09-02"
+  },
+  {
+    "id": 3,
+    "amount": "12.00",
+    "category": "Food",
+    "description": "Pizza for kid",
+    "date": "2026-10-15"
+  }
+]

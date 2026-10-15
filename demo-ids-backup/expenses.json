@@ -1,0 +1,5 @@
+[
+  {"id": 1, "amount": "4.50", "category": "Food", "description": "Sandwich", "date": "2026-09-01"},
+  {"id": 2, "amount": "2.75", "category": "Transport", "description": "Bus", "date": "2026-09-02"},
+  {"id": 3, "amount": "86.00", "category": "Health", "description": "Dentist (claim back!)", "date": "2026-09-03"}
+]

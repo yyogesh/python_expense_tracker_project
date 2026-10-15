@@ -17,7 +17,7 @@ from pathlib import Path
 # Folder where data files are stored.
 # os.environ.get() reads an environment variable if it is set, otherwise uses
 # the default "data". This lets a user store data elsewhere without editing code.
-DATA_DIR = Path(os.environ.get("EXPENSE_TRACKER_DATA_DIR", "data"))
+DATA_DIR = Path(os.environ.get("EXPENSE_TRACKER_DATA_DIR", "demo-ids"))
 
 EXPENSES_FILE = "expenses.json"
 SETTINGS_FILE = "settings.json"

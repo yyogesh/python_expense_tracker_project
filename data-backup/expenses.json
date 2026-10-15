@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "amount": 50.0,
+    "category": "Food",
+    "description": "Groceries",
+    "date": "2026-09-02"
+  },
+  {
+    "id": 2,
+    "amount": 45.2,
+    "category": "Food",
+    "description": "Groceries",
+    "date": "2026-09-02"
+  },
+  {
+    "id": 3,
+    "amount": 12.0,
+    "category": "Transport",
+    "description": "Bus",
+    "date": "2026-08-15"
+  },
+  {
+    "id": 4,
+    "amount": 1000.0,
+    "category": "Health",
+    "description": "Health report",
+    "date": "2026-10-12"
+  }
+]

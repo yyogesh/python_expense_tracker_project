@@ -53,3 +53,38 @@ pip install -e ".[dev]"
 float ==> base 2
 
 base 10
+
+
+>>> import sqlite3
+>>> conn = sqlite3.connect(":memory:")
+
+>>> conn.execute("INSERT INTO people (name, age) VALUES ('Asha', 31)")
+>>> conn.execute("INSERT INTO people (name, age) VALUES ('Ben', 25)")
+>>> conn.execute("SELECT * FROM people").fetchall()
+[(1, 'Asha', 31), (2, 'Ben', 25)]
+
+
+>>> conn.execute("SELECT name FROM people WHERE age > 30").fetchall()
+[('Asha',)]
+>>> conn.execute("SELECT name FROM people ORDER BY age").fetchall()
+[('Ben',), ('Asha',)]
+>>> conn.execute("UPDATE people SET age = 26 WHERE id = 2")
+>>> conn.execute("DELETE FROM people WHERE id = 1")
+>>> conn.execute("SELECT * FROM people").fetchall()
+[(2, 'Ben', 26)]
+
+CREATE TABLE  = the dataclass fields
+INSERT        = list.append
+SELECT        = load everything
+WHERE         = list comprehension with "if"
+ORDER BY      = sorted()
+UPDATE        = dataclasses.replace
+DELETE        = list.remove
+
+
+
+$12.50
+
+A: Float
+B: Text
+C: Integer 1250 cent
