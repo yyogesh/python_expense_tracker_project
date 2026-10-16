@@ -25,10 +25,15 @@ from typing import Any
 from expense_tracker.config import EXPENSES_FILE, SETTINGS_FILE
 from expense_tracker.models import Expense, to_money
 from expense_tracker.storage import (
+    connect,
+    delete_expense,
+    get_expense,
+    get_setting,
+    insert_expense,
     load_expenses,
-    load_settings,
-    save_expenses,
-    save_settings,
+    migrate_from_json,
+    set_setting,
+    update_expense,
 )
 
 

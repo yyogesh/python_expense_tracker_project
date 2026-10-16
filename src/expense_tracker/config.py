@@ -50,3 +50,9 @@ MAX_DESCRIPTION_LENGTH = 100
 # Warn the user when they have spent this share of their monthly budget.
 # A Decimal too, so "exactly 80%" is compared exactly.
 BUDGET_WARNING_RATIO = Decimal("0.8")
+
+
+DATABASE_FILE = "expenses.db"
+
+EXPENSES_FILE = "expenses.json"
+SETTINGS_FILE = "settings.json"
