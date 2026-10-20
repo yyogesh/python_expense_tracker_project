@@ -19,6 +19,8 @@ from pathlib import Path
 # the default "data". This lets a user store data elsewhere without editing code.
 DATA_DIR = Path(os.environ.get("EXPENSE_TRACKER_DATA_DIR", "demo-ids"))
 
+DATABASE_FILE = "expenses.db"
+# Version 1 JSON files, read once and migrated into the database.
 EXPENSES_FILE = "expenses.json"
 SETTINGS_FILE = "settings.json"
 EXPORT_FILE = "expenses_export.csv"
@@ -50,9 +52,3 @@ MAX_DESCRIPTION_LENGTH = 100
 # Warn the user when they have spent this share of their monthly budget.
 # A Decimal too, so "exactly 80%" is compared exactly.
 BUDGET_WARNING_RATIO = Decimal("0.8")
-
-
-DATABASE_FILE = "expenses.db"
-
-EXPENSES_FILE = "expenses.json"
-SETTINGS_FILE = "settings.json"

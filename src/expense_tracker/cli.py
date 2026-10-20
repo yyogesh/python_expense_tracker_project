@@ -331,9 +331,13 @@ def main() -> int:
     except StorageError as error:
         print(f"Could not load your data: {error}")
         return 1
-    try:
-        run(tracker)
-    except (KeyboardInterrupt, EOFError):
-        # Ctrl+C or Ctrl+D: exit politely instead of showing a traceback.
-        print("\nGoodbye!")
+    if tracker.imported:
+        print(f"Moved {tracker.imported} expense(s) from Version 1 into the database.")
+
+    with tracker:
+        try:
+            run(tracker)
+        except (KeyboardInterrupt, EOFError):
+            # Ctrl+C or Ctrl+D: exit politely instead of showing a traceback.
+            print("\nGoodbye!")
     return 0
