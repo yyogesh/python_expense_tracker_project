@@ -37,6 +37,9 @@ EXPENSE_TRACKER_DATA_DIR="$HOME/my-expenses" expense-tracker
 
 $env:EXPENSE_TRACKER_DATA_DIR = "$HOME\my-expenses"
 
+EXPENSE_TRACKER_LOG_LEVEL=DEBUG expense-tracker                # macOS/Linux
+$env:EXPENSE_TRACKER_LOG_LEVEL="DEBUG"; expense-tracker # window
+
 
 echo $?                  # macOS / Linux
 echo $LASTEXITCODE       # Windows PowerShell
@@ -88,3 +91,5 @@ $12.50
 A: Float
 B: Text
 C: Integer 1250 cent
+
+

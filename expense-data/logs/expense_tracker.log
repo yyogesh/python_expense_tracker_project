@@ -1,0 +1,7 @@
+2026-10-21 17:30:50 INFO     expense_tracker.cli: Starting Expense Tracker v1.0.0 with data folder: D:\Ysquare\Python2026\Projects\expense_tracker\expense-data
+2026-10-21 17:30:50 INFO     expense_tracker.storage: Created a new, empty database at D:\Ysquare\Python2026\Projects\expense_tracker\expense-data\expenses.db
+2026-10-21 17:31:09 DEBUG    expense_tracker.cli: Menu option 1: Add expense
+2026-10-21 17:31:16 INFO     expense_tracker.tracker: Added expense #1 (Food)
+2026-10-21 17:31:49 DEBUG    expense_tracker.cli: Menu option 7: Summary report
+2026-10-21 17:32:34 DEBUG    expense_tracker.tracker: Closed the database
+2026-10-21 17:32:34 INFO     expense_tracker.cli: Stopped

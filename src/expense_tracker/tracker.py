@@ -17,6 +17,7 @@ Key idea - encapsulation:
 from __future__ import annotations
 
 import datetime as dt
+import logging
 from dataclasses import replace
 from decimal import Decimal
 from pathlib import Path
@@ -35,6 +36,8 @@ from expense_tracker.storage import (
     set_setting,
     update_expense,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ExpenseNotFoundError(LookupError):
@@ -58,6 +61,7 @@ class ExpenseTracker:
 
     def close(self) -> None:
         self._conn.close()
+        logger.debug("Closed the database")
 
     # with block __enter__ and __exit__ lets callers write:
 
@@ -89,7 +93,9 @@ class ExpenseTracker:
         self, amount: Decimal, category: str, description: str, date: dt.date
     ) -> Expense:
         # The database chooses the ID and never gives it out again.
-        return insert_expense(self._conn, amount, category, description, date)
+        expense = insert_expense(self._conn, amount, category, description, date)
+        logger.info("Added expense #%d (%s)", expense.id, category)
+        return expense
 
     def update(self, expense_id: int, **changes: Any) -> Expense:
         """Change fields of an expense, e.g. ``update(3, amount=Decimal("9.99"))``.
@@ -100,11 +106,13 @@ class ExpenseTracker:
             raise ValueError("The ID of an expense cannot be changed.")
         old = self.get(expense_id)
         new = replace(old, **changes)  # frozen dataclass -> build a new object
+        logger.info("Updating expense #%d (%s)", new.id, new.category)
         update_expense(self._conn, new)
         return new
 
     def delete(self, expense_id: int) -> Expense:
         expense = self.get(expense_id)
+        logger.info("Deleting expense #%d (%s)", expense.id, expense.category)
         delete_expense(self._conn, expense_id)
         return expense
 
@@ -120,3 +128,4 @@ class ExpenseTracker:
         """Set the budget, or pass None to remove it."""
         value = None if amount is None else str(amount)
         set_setting(self._conn, "monthly_budget", value)
+        logger.info("Monthly budget %s", "removed" if value is None else "set")

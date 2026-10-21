@@ -17,3 +17,5 @@ dist/
 
 # Personal data - never upload your real expenses to GitHub
 data/
+
+.env

@@ -14,11 +14,13 @@ Flow of the program:
 from __future__ import annotations
 
 import datetime as dt
+import logging
 from collections.abc import Callable
 from decimal import Decimal
 from typing import TypeVar
 
 from expense_tracker import __version__, reports
+from expense_tracker.app_config import ConfigError, load_config
 from expense_tracker.charts import ChartError, save_category_pie, save_monthly_bar
 from expense_tracker.config import (
     CATEGORIES,
@@ -27,6 +29,7 @@ from expense_tracker.config import (
     DATA_DIR,
     EXPORT_FILE,
 )
+from expense_tracker.logging_config import setup_logging
 from expense_tracker.models import Expense
 from expense_tracker.storage import StorageError, export_to_csv
 from expense_tracker.tracker import ExpenseNotFoundError, ExpenseTracker
@@ -39,6 +42,8 @@ from expense_tracker.validators import (
     parse_month,
     parse_positive_int,
 )
+
+logger = logging.getLogger(__name__)
 
 # T is a "type variable": ask() returns whatever type its parser returns.
 T = TypeVar("T")
@@ -315,21 +320,31 @@ def run(tracker: ExpenseTracker) -> None:
         if choice not in MENU:
             print("  ! Invalid option, please try again.")
             continue
-        _label, action = MENU[choice]
+        label, action = MENU[choice]
+        logger.debug("Menu option %s: %s", choice, label)
         try:
             action(tracker)
         # Expected problems: show a message and keep the app running.
         except (ExpenseNotFoundError, StorageError, ChartError) as error:
+            logger.warning("%s failed: %s", label, error)
             print(f"  ! {error}")
 
 
 def main() -> int:
     """Start the app. Returns an exit code: 0 = OK, 1 = error."""
-    print(f"Expense Tracker v{__version__}  (data folder: {DATA_DIR.resolve()})")
     try:
-        tracker = ExpenseTracker(DATA_DIR)
+        config = load_config()
+    except ConfigError as error:
+        print(f"Configuration problem: {error}")
+        return 1
+    print(f"Expense Tracker v{__version__}  (data folder: {DATA_DIR.resolve()})")
+    setup_logging(config.log_file, config.log_level)
+    data_dir = config.data_dir.resolve()
+    logger.info(f"Starting Expense Tracker v{__version__} with data folder: {data_dir}")
+    try:
+        tracker = ExpenseTracker(data_dir)
     except StorageError as error:
-        print(f"Could not load your data: {error}")
+        logger.error(f"Could not load your data: {error}")
         return 1
     if tracker.imported:
         print(f"Moved {tracker.imported} expense(s) from Version 1 into the database.")
@@ -340,4 +355,8 @@ def main() -> int:
         except (KeyboardInterrupt, EOFError):
             # Ctrl+C or Ctrl+D: exit politely instead of showing a traceback.
             print("\nGoodbye!")
+        except Exception:
+            logger.exception("Unexpected error, the app crashed")
+            raise
+    logger.info("Stopped")
     return 0

@@ -15,7 +15,7 @@ version = "1.0.0"
 description = "A command-line app to track personal expenses"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["python-dotenv>=1.0"]
 
 # Optional extras. Install with:  pip install -e ".[charts]"  or  ".[dev]"
 [project.optional-dependencies]
@@ -52,6 +52,7 @@ select = [
     "B",    # flake8-bugbear      - common bug patterns
     "UP",   # pyupgrade           - use modern Python syntax
     "SIM",  # flake8-simplify     - simpler ways to write the same thing
+    "G",    # flake8-logging-format - no f-strings inside logger calls
 ]
 
 [tool.ruff.format]

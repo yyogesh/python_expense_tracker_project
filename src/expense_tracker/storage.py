@@ -30,6 +30,7 @@ from __future__ import annotations
 import csv
 import datetime as dt
 import json
+import logging
 import sqlite3
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
@@ -40,6 +41,8 @@ from typing import Any
 from expense_tracker.models import Expense, to_money
 
 CSV_FIELDS = ["id", "date", "category", "amount", "description"]
+
+logger = logging.getLogger(__name__)
 
 # The database "schema": which tables exist and what each column holds.
 # IF NOT EXISTS makes it safe to run every time the app starts.
@@ -86,6 +89,7 @@ def from_cents(cents: int) -> Decimal:
 def connect(path: Path) -> sqlite3.Connection:
     """Open (or create) the database file and make sure the tables exist."""
     path.parent.mkdir(parents=True, exist_ok=True)
+    is_new = not path.exists()  # check BEFORE connect(), which creates it
     conn = sqlite3.connect(path)
     # Rows behave like dictionaries: row["category"] instead of row[2].
     conn.row_factory = sqlite3.Row
@@ -94,6 +98,11 @@ def connect(path: Path) -> sqlite3.Connection:
     except sqlite3.DatabaseError as error:
         conn.close()
         raise StorageError(f"{path} is not a valid database: {error}") from error
+
+    if is_new:
+        logger.info("Created a new, empty database at %s", path.resolve())
+    else:
+        logger.debug("Opened database %s", path.resolve())
     return conn
 
 
@@ -203,6 +212,7 @@ def migrate_from_json(
         # Never guess with someone's data: merging two sets of IDs could
         # silently mix them up. Stop and let the user decide.
         names = ", ".join(path.name for path in old_files)
+        logger.warning("Migration refused: database not empty, found %s", names)
         raise StorageError(
             f"The database already has expenses, but old files were found too: "
             f"{names}. Move them out of the data folder to continue."
@@ -230,6 +240,13 @@ def migrate_from_json(
     # Only after the data is safely saved: rename (not delete) the old files.
     for path in old_files:
         path.replace(path.with_name(path.name + ".migrated"))
+
+    logger.info(
+        "Imported %d expense(s) and %d setting(s) from Version 1 files: %s",
+        len(expenses),
+        len(settings),
+        ", ".join(path.name for path in old_files),
+    )
     return len(expenses)
 
 
@@ -249,6 +266,7 @@ def export_to_csv(expenses: Iterable[Expense], path: Path) -> int:
         for expense in expenses:
             writer.writerow(expense.to_dict())
             count += 1
+    logger.info("Exported %d expense(s) to %s", count, path)
     return count
 
 
@@ -270,6 +288,7 @@ def _transaction(conn: sqlite3.Connection) -> Iterator[None]:
         with conn:
             yield
     except sqlite3.Error as error:
+        logger.exception("Database write failed")
         raise StorageError(f"Could not save to the database: {error}") from error
 
 

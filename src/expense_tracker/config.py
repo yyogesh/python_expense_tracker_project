@@ -21,10 +21,17 @@ DATA_DIR = Path(os.environ.get("EXPENSE_TRACKER_DATA_DIR", "demo-ids"))
 
 DATABASE_FILE = "expenses.db"
 # Version 1 JSON files, read once and migrated into the database.
+DEFAULT_LOG_LEVEL = "INFO"
+DEFAULT_DATA_DIR = "data"
+ENV_FILE = ".env"
 EXPENSES_FILE = "expenses.json"
 SETTINGS_FILE = "settings.json"
 EXPORT_FILE = "expenses_export.csv"
 CHARTS_DIR = "charts"
+
+# The log file lives in the data folder: data/logs/expense_tracker.log
+LOGS_DIR = "logs"
+LOG_FILE = "expense_tracker.log"
 
 # A tuple (not a list) because it must never change while the app runs.
 CATEGORIES: tuple[str, ...] = (
